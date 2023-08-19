@@ -1,6 +1,6 @@
 package com.example.backend.Util;
 
-import com.example.backend.model.BookRequest;
+import com.example.backend.model.Book;
 
 
 import java.util.ArrayList;
@@ -8,9 +8,9 @@ import java.util.List;
 
 
 public class Database {
-    private static List<BookRequest> bookDatabase =null;
+    private static List<Book> bookDatabase =null;
 
-    public List<BookRequest> getDatabase(){
+    public List<Book> getDatabase(){
         if(bookDatabase == null){
             bookDatabase = new ArrayList<>();
         }
@@ -19,7 +19,7 @@ public class Database {
     public Database(){}
 
 
-    public void updateDatabase(List<BookRequest> list){
+    public void updateDatabase(List<Book> list){
        bookDatabase = list;
     }
 

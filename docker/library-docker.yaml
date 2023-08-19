@@ -1,0 +1,23 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: library
+      MYSQL_USER: library-user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"
+
+  tomcat:
+    image: mylibrary:1.0
+    environment:
+      DATABASE_URL: jdbc:mysql://mysql/library
+      DATABASE_USERNAME: library-user
+      DATABASE_PASSWORD: password
+      restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      - mysql

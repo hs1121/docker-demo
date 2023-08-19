@@ -11,14 +11,14 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookRequest {
-    private Long key;
+
     private String name;
     private String author;
     private Integer edition;
     private Double price;
 
-    public BookResponse toResponse(){
-        return new BookResponse(name,author,edition,price);
+    public Book toBook(){
+        return new Book(name,author,edition,price);
     }
 
 }

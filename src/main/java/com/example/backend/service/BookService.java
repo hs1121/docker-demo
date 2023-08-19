@@ -2,94 +2,77 @@ package com.example.backend.service;
 
 import com.example.backend.Util.Database;
 import com.example.backend.Util.Response;
+import com.example.backend.model.Book;
 import com.example.backend.model.BookRequest;
 import com.example.backend.model.BookResponse;
+import com.example.backend.repository.BookRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class BookService {
 
-    private Database database= new Database();
-    public Response<BookResponse> insertBook(BookRequest book){
-        List<BookRequest> list = database.getDatabase();
-        list.add(book);
-        database.updateDatabase(list);
+    @Autowired
+    private BookRepository bookRepository;
 
-        return new Response<>(book.toResponse(),201,"Book Inserted successfully");
+    private Database database= new Database();
+    public Response<BookResponse> insertBook(BookRequest bookRequest){
+        Book book = bookRequest.toBook();
+
+        Book response =bookRepository.save(book);
+
+        return new Response<>(response.toResponse(), HttpStatus.CREATED.value(),"Book Inserted successfully");
     }
 
 
     public Response<List<BookResponse>> getAllBooks() {
-        List<BookResponse> listResponse = database.getDatabase().stream().map(BookRequest::toResponse).collect(Collectors.toList());
-        return new Response<>(listResponse,200,"success");
+        List<BookResponse> response = bookRepository.getAllBooks().stream().map(Book::toResponse).collect(Collectors.toList());
+        return new Response<>(response,200,"success");
 
     }
 
     public Response<BookResponse> getBook(Long id) {
-        BookResponse bookResponse =null;
-       for( BookRequest bookRequest : database.getDatabase() ){
-            if (bookRequest.getKey()== id){
-                bookResponse = bookRequest.toResponse();
-                break;
-            }
-       }
-       if(bookResponse == null)
-           return new Response<>(bookResponse,404," Book Not Found");
-       else
-           return new Response<>(bookResponse,200," Success");
+        Optional<Book> optionalBook=bookRepository.findById(id);
+        if (optionalBook.isEmpty())
+            return new Response<>(null,HttpStatus.NOT_FOUND.value()," Book Not Found");
+
+        return new Response<>(optionalBook.get().toResponse(), 200," Success");
     }
     public Response<BookResponse> getBook(String name) {
-        BookResponse bookResponse =null;
-        for( BookRequest bookRequest : database.getDatabase() ){
-            if (bookRequest.getName().equals(name)){
-                bookResponse = bookRequest.toResponse();
-                break;
-            }
-        }
-        if(bookResponse == null)
+        Optional<Book> bookOptional=bookRepository.getBookByName(name);
+        if (bookOptional.isEmpty())
             return new Response<>(null,404," Book Not Found");
-        else
-            return new Response<>(bookResponse,200," Success");
+
+        return new Response<>(bookOptional.get().toResponse(), 200," Success");
+
+
     }
 
     public Response<BookResponse> putBook(BookRequest book) {
         return new Response<>(null,200," Not Yet Implemented");
     }
 
-    public Response<BookResponse> deleteBook(Long id) {
-        BookRequest bookRequest1 =null;
-        for( BookRequest bookRequest : database.getDatabase() ){
-            if (bookRequest.getKey()== id){
-                bookRequest1 = bookRequest;
-                break;
-            }
-        }
-
-        if(bookRequest1 == null)
-            return new Response<>(null,404," Book Not Found");
-        else {
-            database.getDatabase().remove(bookRequest1);
-            return new Response<>(bookRequest1.toResponse(), 200, "Book Deleted Successfully");
-        }
+    public Response<Void> deleteBook(Long id) {
+        Optional<Book> bookOptional=bookRepository.findById(id);
+        if (bookOptional.isEmpty())
+            return new Response<>(null,HttpStatus.NOT_FOUND.value(), " Book Not Found");
+         bookRepository.deleteById(id);
+        return new Response<>(null, 200, "Book Deleted Successfully");
     }
 
-    public Response<BookResponse> deleteBook(String name) {
-        BookRequest bookRequest1 =null;
-        for( BookRequest bookRequest : database.getDatabase() ){
-            if (bookRequest.getName().equals(name)){
-                bookRequest1 = bookRequest;
-                break;
-            }
-        }
+    @Transactional
+    public Response<Void> deleteBook(String name) {
+        Optional<Book> bookOptional=bookRepository.getBookByName(name);
+        if (bookOptional.isEmpty())
+            return new Response<>(null,HttpStatus.NOT_FOUND.value(), " Book Not Found");
+        bookRepository.deleteBookByName(name);
 
-        if(bookRequest1 == null)
-            return new Response<>(null,404," Book Not Found");
-        else {
-            database.getDatabase().remove(bookRequest1);
-            return new Response<>(bookRequest1.toResponse(), 200, "Book Deleted Successfully");
-        }
+        return new Response<>(null, 200, " Book Deleted Successfully");
     }
 }
